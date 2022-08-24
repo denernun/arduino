@@ -1,16 +1,16 @@
 #include "Arduino.h"
 
 // ENTRADA SENSOR
-const int pinoSensor = A0;
-
-// ON
-const int pinoLED11 = 11;
+const int pinoSensorA0 = A0;
+const int pinoSensorA1 = A1;
 
 // SENSOR
 const int pinoLED12 = 12;
+const int pinoLED13 = 13;
 
 // Valor de Leitura do Sensor
-int valSensor = 0;
+int valSensorA0 = 0;
+int valSensorA1 = 0;
 
 void setup(){
 
@@ -18,30 +18,31 @@ void setup(){
   Serial.begin(9600);
 
   // INPUTS
-  pinMode(pinoSensor, INPUT);
+  pinMode(pinoSensorA0, INPUT);
+  pinMode(pinoSensorA1, INPUT);
 
   // OUTPUTS
-  pinMode(pinoLED11, OUTPUT);
   pinMode(pinoLED12, OUTPUT);
+  pinMode(pinoLED13, OUTPUT);
 
 }
 
 void loop(){
 
-  digitalWrite(pinoLED11, HIGH);
-
-  valSensor = analogRead(pinoSensor);
-
-  Serial.println(valSensor);
-
-  if(valSensor > 500) {
-
-    digitalWrite(pinoLED12, HIGH);
-
+  valSensorA0 = analogRead(pinoSensorA0);
+  Serial.println(valSensorA0);
+  if(valSensorA0 > 500) {
+    digitalWrite(pinoLED13, HIGH);
   } else {
+    digitalWrite(pinoLED13, LOW);
+  }
 
+  valSensorA1 = analogRead(pinoSensorA1);
+  Serial.println(valSensorA1);
+  if(valSensorA1 > 500) {
+    digitalWrite(pinoLED12, HIGH);
+  } else {
     digitalWrite(pinoLED12, LOW);
-
   }
 
 }
