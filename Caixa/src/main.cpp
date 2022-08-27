@@ -1,17 +1,144 @@
 #include "Arduino.h"
 #include <LiquidCrystal_I2C.h>
+#include <DHT.h>
 
-LiquidCrystal_I2C lcd(0x27,16,2);
+// Pinos
+#define PIN_LED 13
+#define PIN_LED_POT 11
+#define PIN_RELE 12
+#define PIN_SENSOR 10
+#define PIN_DISTANCIA 9
+#define PIN_BUTTON 8
+#define PIN_POT A0
+#define PIN_TRIGGER 6
+#define PIN_ECHO 5
+
+// DHT
+#define DHTPIN 7
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+unsigned long lastTimeDhtChanged = millis();
+unsigned long debounceDhtDuration = 5000;
+
+// LCD
+#define LCD_ROWS 2
+#define LCD_COLS 16
+LiquidCrystal_I2C lcd(0x27,LCD_ROWS,LCD_COLS);
+
+// RELE
+#define RELE_LIGADO LOW
+#define RELE_DESLIGADO HIGH
+
+// POT
+unsigned int valuePot = 0;
+char valuePotStr[7];
+
+// BUTTON
+byte lastButtonState;
+unsigned long lastTimeButtonStateChanged = millis();
+unsigned long debounceDuration = 50;
+
+// SENSOR
+bool sensorState = false;
+bool lastSensorState = false;
 
 void setup(){
+
+  // SERIAL
+  Serial.begin(9600);
+
+  // DHT
+  dht.begin();
+
+  // LCD
   lcd.init();
-  lcd.begin(16,2);
+  lcd.clear();
+  lcd.setBacklight(HIGH);
+  lcd.setCursor(0,0);
+  lcd.print("* NJ AUTOMACAO *");
+
+  // LED
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, LOW);
+  pinMode(PIN_LED_POT, OUTPUT);
+  digitalWrite(PIN_LED_POT, LOW);
+
+  // SENSOR
+  pinMode(PIN_SENSOR, INPUT);
+  lastSensorState = false;
+
+  // BUTTON
+  pinMode(PIN_BUTTON, INPUT);
+  lastButtonState = digitalRead(PIN_BUTTON);
+
+  // RELE
+  pinMode(PIN_RELE, OUTPUT);
+  digitalWrite(PIN_RELE, RELE_DESLIGADO);
+
 }
 
 void loop(){
-  lcd.setBacklight(HIGH);
-  lcd.setCursor(0,0);
-  lcd.print("Arduino e Cia !!");
+
+  if (millis() - lastTimeDhtChanged >= debounceDhtDuration) {
+    lastTimeDhtChanged = millis();
+    float t = dht.readTemperature();
+    if (isnan(t)) {
+      lcd.setCursor(7,1);
+      lcd.print("DHT Fail");
+    } else {
+      lcd.setCursor(7,1);
+      lcd.print(t);
+      lcd.setCursor(13,1);
+      lcd.print("C");
+    }
+  }
+
+  // Botao
+  if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
+    byte buttonState = digitalRead(PIN_BUTTON);
+    if (buttonState != lastButtonState) {
+      lastTimeButtonStateChanged = millis();
+      lastButtonState = buttonState;
+      if (buttonState == LOW) {
+      }
+    }
+  }
+
+  // Leitura do Pot
+  valuePot = analogRead(PIN_POT);
+  dtostrf(valuePot,6,1,valuePotStr);
   lcd.setCursor(0,1);
-  lcd.print("LCD e modulo I2C");
+  lcd.print(valuePotStr);
+  analogWrite(PIN_LED_POT, byte (valuePot/4));
+
+  // Liga o LED
+  if (valuePot >= 500) {
+    digitalWrite(PIN_LED, HIGH);
+  } else {
+    digitalWrite(PIN_LED, LOW);
+  }
+
+  // Liga o RELE
+  if (!lastSensorState) {
+    if (valuePot >= 700) {
+      digitalWrite(PIN_RELE, RELE_LIGADO);
+    } else {
+      digitalWrite(PIN_RELE, RELE_DESLIGADO);
+    }
+  }
+
+  // Sensor de Presenca
+  sensorState = digitalRead(PIN_SENSOR);
+  if (sensorState) {
+    if (!lastSensorState) {
+      lastSensorState = true;
+      digitalWrite(PIN_RELE, RELE_LIGADO);
+    }
+  } else {
+    lastSensorState = false;
+    if (valuePot < 700) {
+      digitalWrite(PIN_RELE, RELE_DESLIGADO);
+    }
+  }
+
 }
