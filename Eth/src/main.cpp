@@ -14,9 +14,9 @@ unsigned int pingSpeed = 50;
 bool sensorStateOn = false;
 
 // RELE
-#define RELE_PIN 12
-#define RELE_ON LOW
-#define RELE_OFF HIGH
+#define PIN_RELE 12
+#define ON_RELE LOW
+#define OFF_RELE HIGH
 
 void setup() {
 
@@ -52,7 +52,7 @@ void setup() {
   // }
 
   // RELE
-  pinMode(RELE_PIN, OUTPUT);
+  pinMode(PIN_RELE, OUTPUT);
 
 }
 
@@ -63,12 +63,12 @@ void pingCheck() {
       sensorStateOn = true;
       Serial.print(pingValue);
       Serial.println(" cm - BOMBA LIGADA");
-      digitalWrite(RELE_PIN, RELE_ON);
+      digitalWrite(PIN_RELE, ON_RELE);
     } else if (pingValue <= 10 && sensorStateOn) {
       sensorStateOn = false;
       Serial.print(pingValue);
       Serial.println(" cm - BOMBA DESLIGADA");
-      digitalWrite(RELE_PIN, RELE_OFF);
+      digitalWrite(PIN_RELE, OFF_RELE);
     }
   }
 }

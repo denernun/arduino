@@ -25,15 +25,17 @@ void setup(){
 
 void loop(){
 
-  Serial.println(digitalRead(pushButton));
-  if (digitalRead(pushButton) == LOW)
-  {
-    digitalWrite(led, HIGH);
-  } else {
-    digitalWrite(led, LOW);
+  // Botao
+  if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
+    lastTimeButtonStateChanged = millis();
+    Serial.println(digitalRead(pushButton));
+    if (digitalRead(pushButton) == LOW) {
+      digitalWrite(led, HIGH);
+    } else {
+      digitalWrite(led, LOW);
+    }
   }
 
-  // Botao
   // if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
   //   byte buttonState = digitalRead(pushButton);
   //   if (buttonState != lastButtonState) {
