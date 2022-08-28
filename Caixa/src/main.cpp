@@ -17,15 +17,15 @@
 #define ECHO_PIN 5
 #define MAX_DISTANCE 200
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+unsigned long pingTimer = millis();
 unsigned int pingSpeed = 50;
-unsigned long pingTimer;
 
 // DHT
 #define DHTPIN 7
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 unsigned long lastTimeDhtChanged = millis();
-unsigned long debounceDhtDuration = 5000;
+unsigned int debounceDhtDuration = 5000;
 
 // LCD
 #define LCD_ROWS 2
@@ -54,9 +54,6 @@ void setup() {
   // SERIAL
   Serial.begin(9600);
 
-  // SONAR
-  pingTimer = millis();
-
   // DHT
   dht.begin();
 
@@ -69,17 +66,14 @@ void setup() {
 
   // LED
   pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, LOW);
   pinMode(PIN_LED_POT, OUTPUT);
-  digitalWrite(PIN_LED_POT, LOW);
 
   // PIR
   pinMode(PIN_PIR, INPUT);
   lastSensorState = false;
 
   // BUTTON
-  pinMode(PIN_BUTTON, INPUT);
-  lastButtonState = digitalRead(PIN_BUTTON);
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
 
   // RELE
   pinMode(PIN_RELE, OUTPUT);
@@ -92,7 +86,7 @@ void loop() {
   // SONAR
   if (millis() >= pingTimer) {
     pingTimer += pingSpeed;
-    sonar.ping_timer(echoCheck);
+    // sonar.ping_timer(echoCheck);
   }
 
   // DHT
@@ -113,11 +107,9 @@ void loop() {
   // BUTTON
   if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
     byte buttonState = digitalRead(PIN_BUTTON);
-    if (buttonState != lastButtonState) {
-      lastTimeButtonStateChanged = millis();
-      lastButtonState = buttonState;
-      if (buttonState == LOW) {
-      }
+    if (buttonState == LOW) {
+      digitalWrite(PIN_LED, HIGH);
+      digitalWrite(PIN_RELE, RELE_LIGADO);
     }
   }
 

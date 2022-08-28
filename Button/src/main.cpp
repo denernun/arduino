@@ -1,11 +1,12 @@
 #include "Arduino.h"
 
 // LED
-#define PIN_LED 13
+int led = 13;
+byte lastLedState = LOW;
 
-// BOTAO
-#define PIN_BUTTON 8
-byte lastButtonState;
+// BUTTON
+int pushButton = 2;
+byte lastButtonState = LOW;
 unsigned long lastTimeButtonStateChanged = millis();
 unsigned long debounceDuration = 50;
 
@@ -15,24 +16,35 @@ void setup(){
   Serial.begin(9600);
 
   // LED
-  pinMode(PIN_LED, OUTPUT);
+  pinMode(led, OUTPUT);
 
-  // BOTAO
-  pinMode(PIN_BUTTON, INPUT);
-  lastButtonState = digitalRead(PIN_BUTTON);
+  // BUTTON
+  pinMode(pushButton, INPUT_PULLUP);
 
 }
 
 void loop(){
 
-  // Botao
-  if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
-    byte buttonState = digitalRead(PIN_BUTTON);
-    if (buttonState != lastButtonState) {
-      lastTimeButtonStateChanged = millis();
-      lastButtonState = buttonState;
-      Serial.println(buttonState);
-    }
+  Serial.println(digitalRead(pushButton));
+  if (digitalRead(pushButton) == LOW)
+  {
+    digitalWrite(led, HIGH);
+  } else {
+    digitalWrite(led, LOW);
   }
+
+  // Botao
+  // if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
+  //   byte buttonState = digitalRead(pushButton);
+  //   if (buttonState != lastButtonState) {
+  //     lastTimeButtonStateChanged = millis();
+  //     lastButtonState = buttonState;
+  //     if (buttonState == HIGH) {
+  //       digitalWrite(led, HIGH);
+  //     } else {
+  //       digitalWrite(led, LOW);
+  //     }
+  //   }
+  // }
 
 }
