@@ -1,17 +1,24 @@
 #include "Arduino.h"
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
+#include <NewPing.h>
 
 // Pinos
 #define PIN_LED 13
 #define PIN_LED_POT 11
 #define PIN_RELE 12
-#define PIN_SENSOR 10
+#define PIN_PIR 10
 #define PIN_DISTANCIA 9
 #define PIN_BUTTON 8
 #define PIN_POT A0
-#define PIN_TRIGGER 6
-#define PIN_ECHO 5
+
+// SONAR
+#define TRIGGER_PIN 6
+#define ECHO_PIN 5
+#define MAX_DISTANCE 200
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+unsigned int pingSpeed = 50;
+unsigned long pingTimer;
 
 // DHT
 #define DHTPIN 7
@@ -38,14 +45,17 @@ byte lastButtonState;
 unsigned long lastTimeButtonStateChanged = millis();
 unsigned long debounceDuration = 50;
 
-// SENSOR
+// PIR
 bool sensorState = false;
 bool lastSensorState = false;
 
-void setup(){
+void setup() {
 
   // SERIAL
   Serial.begin(9600);
+
+  // SONAR
+  pingTimer = millis();
 
   // DHT
   dht.begin();
@@ -63,8 +73,8 @@ void setup(){
   pinMode(PIN_LED_POT, OUTPUT);
   digitalWrite(PIN_LED_POT, LOW);
 
-  // SENSOR
-  pinMode(PIN_SENSOR, INPUT);
+  // PIR
+  pinMode(PIN_PIR, INPUT);
   lastSensorState = false;
 
   // BUTTON
@@ -77,8 +87,15 @@ void setup(){
 
 }
 
-void loop(){
+void loop() {
 
+  // SONAR
+  if (millis() >= pingTimer) {
+    pingTimer += pingSpeed;
+    sonar.ping_timer(echoCheck);
+  }
+
+  // DHT
   if (millis() - lastTimeDhtChanged >= debounceDhtDuration) {
     lastTimeDhtChanged = millis();
     float t = dht.readTemperature();
@@ -93,7 +110,7 @@ void loop(){
     }
   }
 
-  // Botao
+  // BUTTON
   if (millis() - lastTimeButtonStateChanged >= debounceDuration) {
     byte buttonState = digitalRead(PIN_BUTTON);
     if (buttonState != lastButtonState) {
@@ -104,7 +121,7 @@ void loop(){
     }
   }
 
-  // Leitura do Pot
+  // POT
   valuePot = analogRead(PIN_POT);
   dtostrf(valuePot,6,1,valuePotStr);
   lcd.setCursor(0,1);
@@ -127,8 +144,8 @@ void loop(){
     }
   }
 
-  // Sensor de Presenca
-  sensorState = digitalRead(PIN_SENSOR);
+  // PIR
+  sensorState = digitalRead(PIN_PIR);
   if (sensorState) {
     if (!lastSensorState) {
       lastSensorState = true;
@@ -141,4 +158,13 @@ void loop(){
     }
   }
 
+}
+
+void echoCheck() {
+  if (sonar.check_timer()) {
+    Serial.print("Ping: ");
+    Serial.print(sonar.ping_result / US_ROUNDTRIP_CM);
+    Serial.println("cm");
+    Serial.println(sonar.ping_cm());
+  }
 }
